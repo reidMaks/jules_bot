@@ -50,7 +50,7 @@ def get_random_iv(update: Update, context: CallbackContext):
         voice_params = dict(voice=voice)
 
     message = update.message.reply_voice(**voice_params,
-                                         caption=text,
+                                         caption=text.replace('(', '\(').replace(')', '\)'),
                                          parse_mode=ParseMode.MARKDOWN_V2)
 
     word.voice = message.effective_attachment
