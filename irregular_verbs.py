@@ -77,6 +77,7 @@ class IrregularVerb:
         self.translation = infinitive.translation
         self.is_verb = True
         self.voice = None
+        self.forms = ('infinitive', 'past_simple', 'past_partisiple')
 
     def get_voice(self):
         if self.voice is not None:
@@ -111,3 +112,5 @@ class IrregularVerbs:
 
     def get_random_verb(self) -> IrregularVerb:
         return random.choice(self.verbs)
+
+IrregularVerbsSet = IrregularVerbs()
