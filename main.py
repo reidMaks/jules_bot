@@ -46,6 +46,8 @@ def error_handler(update: object, context: CallbackContext) -> None:
     # Finally, send the message
     in_entity = update.message or update.callback_query.message 
     context.bot.send_message(chat_id=in_entity.chat_id, text=message, parse_mode=ParseMode.HTML)
+
+
 # Define a few command handlers. These usually take the two arguments update and
 # context.
 def start(update: Update, context: CallbackContext) -> None:
