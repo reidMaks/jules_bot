@@ -17,6 +17,9 @@ def remove_audio_files():
             print("Error while deleting file : ", file)
 
 
+def screen_text(text):
+    return text.replace('(', '\(').replace(')', '\)')
+
 def download_file(link: str) -> str:
     parse_result = urlparse(link)
     path = parse_result.path

@@ -6,7 +6,7 @@ from bs4 import BeautifulSoup
 from telegram import Voice
 from pydub import AudioSegment
 
-from helpers import download_file
+from helpers import download_file, screen_text
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO
@@ -33,12 +33,12 @@ def get_world_set():
                           get_pronunciation_url(tds[0]), translation)
         past_simple = Word(tds[1].get_text().strip(),
                            get_pronunciation_url(tds[1]), translation)
-        past_partisiple = Word(tds[2].get_text().strip(),
+        past_participle = Word(tds[2].get_text().strip(),
                                get_pronunciation_url(tds[2]),
                                translation)
 
         irregular_set.append(IrregularVerb(infinitive, past_simple,
-                                           past_partisiple))
+                                           past_participle))
 
     return irregular_set
 
@@ -51,9 +51,9 @@ def get_pronunciation_url(td):
 class Word:
     def __init__(self, spelling: str, pronunciation: str,
                  translation: str) -> None:
-        self.spelling = spelling
-        self.pronunciation = pronunciation
-        self.translation = translation
+        self.spelling = screen_text(spelling)
+        self.pronunciation = screen_text(pronunciation)
+        self.translation = screen_text(translation)
 
     def get_voice(self) -> Voice:
         file = download_file(self.pronunciation)
@@ -70,14 +70,14 @@ class Word:
 
 class IrregularVerb:
     def __init__(self, infinitive: Word, past_simple: Word,
-                 past_partisiple: Word) -> None:
+                 past_participle: Word) -> None:
         self.infinitive = infinitive
         self.past_simple = past_simple
-        self.past_partisiple = past_partisiple
+        self.past_participle = past_participle
         self.translation = infinitive.translation
         self.is_verb = True
         self.voice = None
-        self.forms = ('infinitive', 'past_simple', 'past_partisiple')
+        self.forms = ('infinitive', 'past_simple', 'past_participle')
 
     def get_voice(self):
         if self.voice is not None:
@@ -86,8 +86,8 @@ class IrregularVerb:
 
         infinitive_voice, *_ = self.infinitive.get_voice()
         past_simple_voice, *_ = self.past_simple.get_voice()
-        past_partisiple_voice, *_ = self.past_partisiple.get_voice()
-        concatenated_voice = infinitive_voice + past_simple_voice + past_partisiple_voice
+        past_participle_voice, *_ = self.past_participle.get_voice()
+        concatenated_voice = infinitive_voice + past_simple_voice + past_participle_voice
         file = concatenated_voice.export(f"full_{self.infinitive.spelling}.ogg",
                                          format="ogg", codec="libopus")
         return concatenated_voice, file, file.name, concatenated_voice.duration_seconds
@@ -96,11 +96,11 @@ class IrregularVerb:
         return "\n".join(
                          [f"`infinitive      ` *{self.infinitive.spelling}*",
                           f"`past simple     ` *{self.past_simple.spelling}*",
-                          f"`past partisiple ` *{self.past_partisiple.spelling}*",
+                          f"`past participle ` *{self.past_participle.spelling}*",
                           f"`translation     ` *{self.infinitive.translation}*"])
 
     def __repr__(self) -> str:
-        return f"{self.infinitive} {self.past_simple} {self.past_partisiple}"
+        return f"{self.infinitive} {self.past_simple} {self.past_participle}"
 
     def __str__(self) -> str:
         return self.__repr__()

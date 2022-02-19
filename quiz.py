@@ -17,8 +17,9 @@ def get_random_question():
     form = random.choice(iv.forms)
 
     q.right_option = getattr(iv, form).spelling
-    q.text = f"""Choose the `{form.replace('_', ' ')}` form of the verb
-                 which translates as `{iv.translation}`"""
+    q.text = "\n".join(
+                       [f"""Choose the `{form.replace('_', ' ')}` form of the verb""",
+                        f"""which translates as `{iv.translation}`"""])
 
     options = [getattr(iv, x).spelling for x in iv.forms]
     random.shuffle(options)
@@ -66,3 +67,11 @@ class Quiz:
         self.message = self.message.edit_text(text=self.current_question.text,
                                               reply_markup=reply_markup,
                                               parse_mode=ParseMode.MARKDOWN_V2)
+
+
+class QuizManager:
+    def __init__(self) -> None:
+        self.pool = []
+
+    def get_quiz(self, user):
+        f=1
