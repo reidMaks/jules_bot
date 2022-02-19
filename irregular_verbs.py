@@ -100,7 +100,7 @@ class IrregularVerb:
                           f"`translation     ` *{self.infinitive.translation}*"])
 
     def __repr__(self) -> str:
-        return f"{self.infinitive} {self.past_simple} {self.past_participle}"
+        return f"{self.infinitive.spelling}-{self.past_simple.spelling}-{self.past_participle.spelling}"
 
     def __str__(self) -> str:
         return self.__repr__()

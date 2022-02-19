@@ -94,11 +94,20 @@ def start_quiz(update: Update, context: CallbackContext):
     if not existed_quiz:
         existed_quiz = Quiz(update.message)
         QUIZ_MAP[user] = existed_quiz
+    else:
+        message = existed_quiz.message
+        message.reply_text('Here is your quiz', reply_to_message_id=message.message_id)
 
 def callback_handler(update: Update, context: CallbackContext):
     global QUIZ_MAP
     user = update.callback_query.from_user.id
     existed_quiz = QUIZ_MAP.get(user)
+
+    if not existed_quiz:
+        update.callback_query.answer("🪲 Sorry. Something went wrong... Try creating a new quiz",
+                                     show_alert=True)
+        return
+    
     existed_quiz.process(update)
 
 def main() -> None:
