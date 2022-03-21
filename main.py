@@ -87,6 +87,31 @@ def get_random_iv(update: Update, context: CallbackContext):
     word.voice = message.effective_attachment
     remove_audio_files()
 
+
+def get_all_iv(update: Update, context: CallbackContext):
+    for word in IrregularVerbsSet.verbs_extended:
+  
+        text = word.get_spelling()
+        voice, *params = word.get_voice()
+
+        if params:
+            voice_params = dict(voice=params[0],
+                                duration=round(params[2], 0))
+        else:
+            voice_params = dict(voice=voice)
+
+        message = update.message.reply_voice(**voice_params,
+                                            caption=text,
+                                            parse_mode=ParseMode.MARKDOWN_V2)
+
+        word.voice = message.effective_attachment
+        remove_audio_files()
+
+
+def feedback(update: Update, context: CallbackContext):
+    text = "З питань розвитку бота чи в разі виникнення проблем в його роботі, пишіть @kms_live"
+    update.message.reply_text(text)
+
 def start_quiz(update: Update, context: CallbackContext):
     global QUIZ_MAP
     user = update.message.from_user.id
@@ -123,6 +148,8 @@ def main() -> None:
     dispatcher.add_handler(CommandHandler("help", help_command))
     dispatcher.add_handler(CommandHandler("get_random_iv", get_random_iv))
     dispatcher.add_handler(CommandHandler("start_quiz", start_quiz))
+    dispatcher.add_handler(CommandHandler("get_all_iv", get_all_iv))
+    dispatcher.add_handler(CommandHandler("feedback", feedback))
 
     # on non command i.e message - echo the message on Telegram
     dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, echo))

@@ -13,8 +13,8 @@ class Question:
         self.explain = ''
 
 
-def get_random_question():
-    iv = IrregularVerbsSet.get_random_verb()
+def get_random_question(extended=False):
+    iv = IrregularVerbsSet.get_random_verb(extended)
     q = Question()
     form = random.choice(iv.forms)
 
@@ -37,21 +37,30 @@ class Quiz:
         self.incorrect = 0
         self.started = False
         self.current_question = None
+        self.extended = False
 
-        keyboard = [[InlineKeyboardButton(text="▶️ start",
-                                          callback_data='start')]]
+        keyboard = [[InlineKeyboardButton(text=" ▶️ normal",
+                                          callback_data='start_normal'), 
+                    InlineKeyboardButton(text=" ▶️ extended",
+                                          callback_data='start_extended')]]
 
         reply_markup = InlineKeyboardMarkup(keyboard)
-        self.message = message.reply_text(text="there should be text that explains the rules",
-                                          reply_markup=reply_markup)
+        text="there should be text that explains the rules"
+        if not hasattr(self, 'message'):
+            self.message = message.reply_text(text=text, reply_markup=reply_markup)
+        else:
+            self.message =  message.edit_text(text=text, reply_markup=reply_markup)
 
     def __repr__(self) -> str:
         return f'User\'s {self.user.full_name} quiz'
 
     def process(self, update: Update = None):
         data = update.callback_query.data
-        if data == 'start':
+        if data.startswith('start'):
+            self.extended = 'extended' in data    
             self.next_question()
+        elif data == 'back':
+            self.__init__(self.message)    
         else:
             right_opt = self.current_question.right_option
             if data == right_opt:
@@ -69,8 +78,10 @@ class Quiz:
             self.next_question()
 
     def next_question(self):
-        self.current_question = get_random_question()
-        keyboard = [[InlineKeyboardButton(text=x, callback_data=x) for x in self.current_question.options]]
+        self.current_question = get_random_question(self.extended)
+        keyboard = [[InlineKeyboardButton(text=x, callback_data=x) for x in self.current_question.options],
+                    [InlineKeyboardButton(text=" ↩️ back",
+                                          callback_data='back')]]
         reply_markup = InlineKeyboardMarkup(keyboard)
         self.message = self.message.edit_text(text="\n".join([self.current_question.text]),
                                               reply_markup=reply_markup,

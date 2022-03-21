@@ -5,6 +5,8 @@ from urllib.parse import urlparse
 import http.client
 import logging
 
+logger = logging.getLogger(__name__)
+
 
 def remove_audio_files():
 
@@ -13,12 +15,16 @@ def remove_audio_files():
     for file in files:
         try:
             os.remove(file)
+            logger.info(f'file {file} was removed' )
         except OSError:
-            print("Error while deleting file : ", file)
+            logger.exception(f"Error while deleting file : {file}")
 
 
 def screen_text(text):
-    return text.replace('(', '\(').replace(')', '\)')
+    symbols = '()-'
+    for s in symbols:
+        text = text.replace(s, f'\{s}')
+    return text
 
 def download_file(link: str) -> str:
     parse_result = urlparse(link)
@@ -45,5 +51,5 @@ def download_file(link: str) -> str:
     data = res.read()
 
     open(path.split('/')[-1], 'bw').write(data)
-
+    logger.info(f'file {file} was downloaded' )
     return pathlib.Path(file_name)

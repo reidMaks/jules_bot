@@ -15,7 +15,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def get_world_set():
+def get_world_set_native_english():
 
     conn = http.client.HTTPSConnection("www.native-english.ru")
 
@@ -25,6 +25,10 @@ def get_world_set():
     soup = BeautifulSoup(data, features="html.parser")
     table = soup.find('table')
     irregular_set = []
+
+    def get_pronunciation_url(td):
+        pronunc_url_template = "https://www.native-english.ru/audio/grammar/irregular-verbs/{}.mp3"
+        return pronunc_url_template.format(td.find('span').get('data-word'))
 
     for tr in table.find_all('tr')[1:]:
         tds = tr.find_all('td')
@@ -43,16 +47,43 @@ def get_world_set():
     return irregular_set
 
 
-def get_pronunciation_url(td):
-    pronunc_url_template = "https://www.native-english.ru/audio/grammar/irregular-verbs/{}.mp3"
-    return pronunc_url_template.format(td.find('span').get('data-word'))
+def get_world_set_lingbase():
+
+    host = "lingbase.com"
+    conn = http.client.HTTPSConnection(host)
+
+    conn.request("GET", "/ru/english/grammar/complete-list-of-irregular-verbs")
+    res = conn.getresponse()
+    data = res.read()
+    soup = BeautifulSoup(data, features="html.parser")
+    table = soup.find('table')
+    irregular_set = []
+
+    def get_pronunciation_url(td):
+        return f"https://lingbase.com{td.find('audio').get('data-normal')}"
+
+    for tr in table.find_all('tr')[1:]:
+        tds = tr.find_all('td')
+        translation = tds[3].get_text().strip()
+        infinitive = Word(tds[0].get_text().strip(),
+                          get_pronunciation_url(tds[0]), translation)
+        past_simple = Word(tds[1].get_text().strip(),
+                           get_pronunciation_url(tds[1]), translation)
+        past_participle = Word(tds[2].get_text().strip(),
+                               get_pronunciation_url(tds[2]),
+                               translation)
+
+        irregular_set.append(IrregularVerb(infinitive, past_simple,
+                                           past_participle))
+
+    return irregular_set
 
 
 class Word:
     def __init__(self, spelling: str, pronunciation: str,
                  translation: str) -> None:
         self.spelling = screen_text(spelling)
-        self.pronunciation = screen_text(pronunciation)
+        self.pronunciation = pronunciation
         self.translation = screen_text(translation)
 
     def get_voice(self) -> Voice:
@@ -104,13 +135,25 @@ class IrregularVerb:
 
     def __str__(self) -> str:
         return self.__repr__()
+    
+    def __eq__(self, other):
+        return self.infinitive.spelling == other.infinitive.spelling
 
 
 class IrregularVerbs:
     def __init__(self) -> None:
-        self.verbs = get_world_set()
+        
+        try:
+            self.verbs = get_world_set_native_english()
+        except Exception as e:
+            logger.exception("there are some issues with native_english")
+        
+        try:
+            self.verbs_extended = [*self.verbs, *[x for x in get_world_set_lingbase() if x not in self.verbs]]
+        except Exception as e:
+            logger.exception("there are some issues with lingbase")
 
-    def get_random_verb(self) -> IrregularVerb:
-        return random.choice(self.verbs)
+    def get_random_verb(self, extended=False) -> IrregularVerb:
+        return random.choice(self.verbs if not extended else self.verbs_extended)
 
 IrregularVerbsSet = IrregularVerbs()
