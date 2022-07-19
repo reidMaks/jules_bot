@@ -1,5 +1,6 @@
 import random
 from time import sleep
+import json
 from telegram.message import Message
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ParseMode, Update
 from irregular_verbs import IrregularVerbsSet
@@ -11,6 +12,10 @@ class Question:
         self.options = ''
         self.right_option = ''
         self.explain = ''
+
+    def toJSON(self):
+        return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True,
+                          indent=4)
 
 
 def get_random_question(extended=False):
