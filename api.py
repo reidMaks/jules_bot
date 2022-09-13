@@ -13,5 +13,5 @@ def question():
     return get_random_question().toJSON()
 
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=os.getenv("PORT", 80))
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=os.getenv("PORT", 80))

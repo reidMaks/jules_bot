@@ -5,7 +5,14 @@ import os
 import traceback
 
 from telegram import Update, ForceReply, ParseMode
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext, CallbackQueryHandler
+from telegram.ext import (
+    Updater,
+    CommandHandler,
+    MessageHandler,
+    Filters,
+    CallbackContext,
+    CallbackQueryHandler,
+)
 from helpers import remove_audio_files
 
 from irregular_verbs import IrregularVerbsSet
@@ -16,10 +23,11 @@ QUIZ_MAP = {}
 
 # Enable logging
 logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
 )
 
 logger = logging.getLogger(__name__)
+
 
 def error_handler(update: object, context: CallbackContext) -> None:
     """Log the error and send a telegram message to notify the developer."""
@@ -28,24 +36,28 @@ def error_handler(update: object, context: CallbackContext) -> None:
 
     # traceback.format_exception returns the usual python message about an exception, but as a
     # list of strings rather than a single string, so we have to join them together.
-    tb_list = traceback.format_exception(None, context.error, context.error.__traceback__)
-    tb_string = ''.join(tb_list)
+    tb_list = traceback.format_exception(
+        None, context.error, context.error.__traceback__
+    )
+    tb_string = "".join(tb_list)
 
     # Build the message with some markup and additional information about what happened.
     # You might need to add some logic to deal with messages longer than the 4096 character limit.
     update_str = update.to_dict() if isinstance(update, Update) else str(update)
     message = (
-        f'An exception was raised while handling an update\n'
-        f'<pre>update = {html.escape(json.dumps(update_str, indent=2, ensure_ascii=False))}'
-        '</pre>\n\n'
-        f'<pre>context.chat_data = {html.escape(str(context.chat_data))}</pre>\n\n'
-        f'<pre>context.user_data = {html.escape(str(context.user_data))}</pre>\n\n'
-        f'<pre>{html.escape(tb_string)}</pre>'
+        f"An exception was raised while handling an update\n"
+        f"<pre>update = {html.escape(json.dumps(update_str, indent=2, ensure_ascii=False))}"
+        "</pre>\n\n"
+        f"<pre>context.chat_data = {html.escape(str(context.chat_data))}</pre>\n\n"
+        f"<pre>context.user_data = {html.escape(str(context.user_data))}</pre>\n\n"
+        f"<pre>{html.escape(tb_string)}</pre>"
     )
 
     # Finally, send the message
-    in_entity = update.message or update.callback_query.message 
-    context.bot.send_message(chat_id=in_entity.chat_id, text=message, parse_mode=ParseMode.HTML)
+    in_entity = update.message or update.callback_query.message
+    context.bot.send_message(
+        chat_id=in_entity.chat_id, text=message, parse_mode=ParseMode.HTML
+    )
 
 
 # Define a few command handlers. These usually take the two arguments update and
@@ -54,14 +66,14 @@ def start(update: Update, context: CallbackContext) -> None:
     """Send a message when the command /start is issued."""
     user = update.effective_user
     update.message.reply_markdown_v2(
-        fr'Hi {user.mention_markdown_v2()}\!',
+        rf"Hi {user.mention_markdown_v2()}\!",
         reply_markup=ForceReply(selective=True),
     )
 
 
 def help_command(update: Update, context: CallbackContext) -> None:
     """Send a message when the command /help is issued."""
-    update.message.reply_text('Help!')
+    update.message.reply_text("Help!")
 
 
 def echo(update: Update, context: CallbackContext) -> None:
@@ -75,14 +87,13 @@ def get_random_iv(update: Update, context: CallbackContext):
     voice, *params = word.get_voice()
 
     if params:
-        voice_params = dict(voice=params[0],
-                            duration=round(params[2], 0))
+        voice_params = dict(voice=params[0], duration=round(params[2], 0))
     else:
         voice_params = dict(voice=voice)
 
-    message = update.message.reply_voice(**voice_params,
-                                         caption=text,
-                                         parse_mode=ParseMode.MARKDOWN_V2)
+    message = update.message.reply_voice(
+        **voice_params, caption=text, parse_mode=ParseMode.MARKDOWN_V2
+    )
 
     word.voice = message.effective_attachment
     remove_audio_files()
@@ -90,19 +101,18 @@ def get_random_iv(update: Update, context: CallbackContext):
 
 def get_all_iv(update: Update, context: CallbackContext):
     for word in IrregularVerbsSet.verbs_extended:
-  
+
         text = word.get_spelling()
         voice, *params = word.get_voice()
 
         if params:
-            voice_params = dict(voice=params[0],
-                                duration=round(params[2], 0))
+            voice_params = dict(voice=params[0], duration=round(params[2], 0))
         else:
             voice_params = dict(voice=voice)
 
-        message = update.message.reply_voice(**voice_params,
-                                            caption=text,
-                                            parse_mode=ParseMode.MARKDOWN_V2)
+        message = update.message.reply_voice(
+            **voice_params, caption=text, parse_mode=ParseMode.MARKDOWN_V2
+        )
 
         word.voice = message.effective_attachment
         remove_audio_files()
@@ -111,6 +121,7 @@ def get_all_iv(update: Update, context: CallbackContext):
 def feedback(update: Update, context: CallbackContext):
     text = "З питань розвитку бота чи в разі виникнення проблем в його роботі, пишіть @kms_live"
     update.message.reply_text(text)
+
 
 def start_quiz(update: Update, context: CallbackContext):
     global QUIZ_MAP
@@ -121,7 +132,8 @@ def start_quiz(update: Update, context: CallbackContext):
         QUIZ_MAP[user] = existed_quiz
     else:
         message = existed_quiz.message
-        message.reply_text('Here is your quiz', reply_to_message_id=message.message_id)
+        message.reply_text("Here is your quiz", reply_to_message_id=message.message_id)
+
 
 def callback_handler(update: Update, context: CallbackContext):
     global QUIZ_MAP
@@ -129,11 +141,13 @@ def callback_handler(update: Update, context: CallbackContext):
     existed_quiz = QUIZ_MAP.get(user)
 
     if not existed_quiz:
-        update.callback_query.answer("🪲 Sorry. Something went wrong... Try creating a new quiz",
-                                     show_alert=True)
+        update.callback_query.answer(
+            "🪲 Sorry. Something went wrong... Try creating a new quiz", show_alert=True
+        )
         return
-    
+
     existed_quiz.process(update)
+
 
 def main() -> None:
     """Start the bot."""
@@ -167,5 +181,5 @@ def main() -> None:
     updater.idle()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
